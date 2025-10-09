@@ -3,6 +3,7 @@ import { useAuth } from "../auth/AuthContext";
 
 export default function HomePage() {
   const { loggedIn, signIn } = useAuth();
+
   return (
     <>
       <h1>Home</h1>

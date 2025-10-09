@@ -42,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       initializing,
       signIn: async () => {
-        await signInWithPopup(auth, googleProvider);
+        const user = await signInWithPopup(auth, googleProvider);
+        console.log(user);
       },
       signOut: async () => {
         await fbSignOut(auth);

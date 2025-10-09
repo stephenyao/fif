@@ -9,6 +9,7 @@ import (
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 )
 
 const (
@@ -29,6 +30,12 @@ func main() {
 	}
 
 	r := chi.NewRouter()
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowCredentials: true,
+	}))
 
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

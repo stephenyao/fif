@@ -5,6 +5,7 @@ go 1.24.2
 require (
 	firebase.google.com/go/v4 v4.18.0
 	github.com/go-chi/chi/v5 v5.2.3
+	github.com/go-chi/cors v1.2.2
 	github.com/joho/godotenv v1.5.1
 	google.golang.org/api v0.251.0
 )
