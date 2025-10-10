@@ -1,4 +1,4 @@
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Alert, Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { getAccountProfile } from "../api/account";
@@ -30,17 +30,30 @@ export default function AccountPage() {
     return (
         <>
             <h1>Account</h1>
-            <p>Manage your account here.</p>
+
             {profile && (
-                <Stack mt="md">
-                    <Text>Name: {profile.name}</Text>
-                    <Text>Email: {profile.email}</Text>
+                <Stack gap="sm">
+                    <Stack gap={2}>
+                        <Text size="sm" fw={600} c="dimmed">
+                            Name
+                        </Text>
+                        <Text>{profile.name}</Text>
+                    </Stack>
+
+                    <Stack gap={2}>
+                        <Text size="sm" fw={600} c="dimmed">
+                            Email
+                        </Text>
+                        <Text>{profile.email}</Text>
+                    </Stack>
+
+                    {/* Add more attributes as needed */}
                 </Stack>
             )}
             {error && (
-                <Text c="red" mt="sm">
-                    {error}
-                </Text>
+                <Alert color="red" mt="md">
+                    <Text c="red">{error}</Text>
+                </Alert>
             )}
             <Group mt="md">
                 <Button color="red" variant="filled" onClick={signOut}>
