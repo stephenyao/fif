@@ -2,7 +2,7 @@
 // AppShell layout and routes (providers live in main.tsx)
 
 import "@mantine/core/styles.css";
-import { AppShell, Center, Loader } from "@mantine/core";
+import { AppShell, Center, Container, Loader } from "@mantine/core";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useDisclosure } from "@mantine/hooks";
 import TopNav from "./components/TopNav";
@@ -37,43 +37,45 @@ export default function App() {
             <TopNav opened={opened} toggle={toggle} />
             <SideNav close={close} />
             <AppShell.Main>
-                <Routes>
-                    <Route
-                        path="/"
-                        element={
-                            loggedIn ? (
-                                <Navigate to="/dashboard" replace />
-                            ) : (
-                                <HomePage />
-                            )
-                        }
-                    />
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <DashboardPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/tax"
-                        element={
-                            <ProtectedRoute>
-                                <TaxPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/account"
-                        element={
-                            <ProtectedRoute>
-                                <AccountPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route path="*" element={<HomePage />} />
-                </Routes>
+                <Container size="md" px="md">
+                    <Routes>
+                        <Route
+                            path="/"
+                            element={
+                                loggedIn ? (
+                                    <Navigate to="/dashboard" replace />
+                                ) : (
+                                    <HomePage />
+                                )
+                            }
+                        />
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute>
+                                    <DashboardPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/tax"
+                            element={
+                                <ProtectedRoute>
+                                    <TaxPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/account"
+                            element={
+                                <ProtectedRoute>
+                                    <AccountPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route path="*" element={<HomePage />} />
+                    </Routes>
+                </Container>
             </AppShell.Main>
         </AppShell>
     );
