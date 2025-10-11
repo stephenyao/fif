@@ -27,7 +27,7 @@ export default function TopNav({ opened, toggle }: TopNavProps) {
                     <Burger
                         opened={opened}
                         onClick={toggle}
-                        hiddenFrom="sm"
+                        hiddenFrom="md"
                         size="sm"
                         aria-label={
                             opened ? "Close navigation" : "Open navigation"
