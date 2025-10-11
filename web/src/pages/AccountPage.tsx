@@ -1,4 +1,4 @@
-import { Alert, Button, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Alert, Button, Group, Skeleton, Stack, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { getAccountProfile } from "../api/account";
@@ -8,6 +8,7 @@ export default function AccountPage() {
     const { user, signOut } = useAuth();
     const [profile, setProfile] = useState<AccountProfile | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(true);
 
     // Fetch from backend when the page loads
     useEffect(() => {
@@ -23,6 +24,7 @@ export default function AccountPage() {
                     setError(err?.message || "Failed to load account");
                 }
             }
+            setLoading(false);
         })();
         return () => controller.abort();
     }, [user]);
@@ -31,8 +33,45 @@ export default function AccountPage() {
         <>
             <h1>Account</h1>
 
+            <AccountProfileSection
+                loading={loading}
+                profile={profile}
+                error={error}
+            />
+
+            <Group mt="md">
+                <Button color="red" variant="filled" onClick={signOut}>
+                    Log out
+                </Button>
+            </Group>
+        </>
+    );
+}
+
+interface AccountProfileSectionProps {
+    loading: boolean;
+    profile: AccountProfile | null;
+    error: string | null;
+}
+
+function AccountProfileSection({
+    loading,
+    profile,
+    error,
+}: AccountProfileSectionProps) {
+    return loading ? (
+        <Stack gap="md" mt="md" align="stretch" w={400}>
+            {[1, 2].map((i) => (
+                <Stack gap={4} key={i}>
+                    <Skeleton height={14} w="40%" />
+                    <Skeleton height={18} w="100%" />
+                </Stack>
+            ))}
+        </Stack>
+    ) : (
+        <>
             {profile && (
-                <Stack gap="sm">
+                <Stack gap="sm" mt="md">
                     <Stack gap={2}>
                         <Text size="sm" fw={600} c="dimmed">
                             Name
@@ -46,20 +85,14 @@ export default function AccountPage() {
                         </Text>
                         <Text>{profile.email}</Text>
                     </Stack>
-
-                    {/* Add more attributes as needed */}
                 </Stack>
             )}
+
             {error && (
                 <Alert color="red" mt="md">
                     <Text c="red">{error}</Text>
                 </Alert>
             )}
-            <Group mt="md">
-                <Button color="red" variant="filled" onClick={signOut}>
-                    Log out
-                </Button>
-            </Group>
         </>
     );
 }
