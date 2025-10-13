@@ -37,7 +37,7 @@ export default function App() {
             <TopNav opened={opened} toggle={toggle} />
             <SideNav close={close} />
             <AppShell.Main>
-                <Container size="md" px="md">
+                <Container size="lg">
                     <Routes>
                         <Route
                             path="/"
