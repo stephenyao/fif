@@ -6,6 +6,8 @@ import (
 	"fif/middleware"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
@@ -18,6 +20,20 @@ type HoldingDTO struct {
 	Quantity float64 `json:"quantity"`
 	Currency string  `json:"currency"`
 	Cost     float64 `json:"cost"`
+}
+
+func getCORSOrigins() []string {
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if allowedOrigins == "" {
+		log.Fatal("ALLOWED_ORIGINS environment variable is required")
+	}
+
+	origins := strings.Split(allowedOrigins, ",")
+	// Trim whitespace from each origin
+	for i := range origins {
+		origins[i] = strings.TrimSpace(origins[i])
+	}
+	return origins
 }
 
 func main() {
@@ -33,9 +49,11 @@ func main() {
 		log.Fatalf("error getting auth client: %v\n", err)
 	}
 
+	origins := getCORSOrigins()
+
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
@@ -92,6 +110,5 @@ func main() {
 		}
 	})
 
-	log.Printf("auth client: %v\n", authClient)
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
