@@ -59,5 +59,11 @@ func main() {
 		r.Get("/holdings", handlers.HoldingsHandler)
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", r))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server starting on port %s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }
