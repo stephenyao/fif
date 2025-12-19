@@ -22,7 +22,7 @@ type Holding = {
 };
 
 const fetchHoldings = async (): Promise<Holding[]> => {
-    const res = await authFetch("http://localhost:8080/holdings", {
+    const res = await authFetch(`${import.meta.env.VITE_API_URL}/holdings`, {
         method: "GET",
     });
     if (!res.ok) {
