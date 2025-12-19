@@ -12,10 +12,6 @@ import (
 	"github.com/go-chi/cors"
 )
 
-const (
-	ctxTokenKey = "idToken" // *auth.Token
-)
-
 type HoldingDTO struct {
 	Name     string  `json:"name"`
 	Symbol   string  `json:"symbol"`
@@ -48,7 +44,7 @@ func main() {
 	r.Use(middleware.AuthMiddleware(authClient))
 
 	r.Get("/account", func(w http.ResponseWriter, r *http.Request) {
-		token := r.Context().Value(ctxTokenKey).(*auth.Token)
+		token := r.Context().Value(middleware.CtxTokenKey{}).(*auth.Token)
 		email, _ := token.Claims["email"].(string)
 		name, _ := token.Claims["name"].(string)
 

@@ -8,7 +8,8 @@ import (
 	"firebase.google.com/go/v4/auth"
 )
 
-type ctxTokenKeyType struct{}
+// CtxTokenKey is the context key for storing the auth token
+type CtxTokenKey struct{}
 
 // AuthVerifier is an interface for verifying authentication tokens
 type AuthVerifier interface {
@@ -25,10 +26,10 @@ func (f *firebaseAuthClient) VerifyIDToken(ctx context.Context, idToken string) 
 }
 
 func AuthMiddleware(client *auth.Client) func(handler http.Handler) http.Handler {
-	return AuthMiddlewareWithVerifier(&firebaseAuthClient{client: client})
+	return authMiddlewareWithVerifier(&firebaseAuthClient{client: client})
 }
 
-func AuthMiddlewareWithVerifier(verifier AuthVerifier) func(handler http.Handler) http.Handler {
+func authMiddlewareWithVerifier(verifier AuthVerifier) func(handler http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -45,7 +46,7 @@ func AuthMiddlewareWithVerifier(verifier AuthVerifier) func(handler http.Handler
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), ctxTokenKeyType{}, token)
+			ctx := context.WithValue(r.Context(), CtxTokenKey{}, token)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

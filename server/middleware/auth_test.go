@@ -35,7 +35,7 @@ func TestAuthMiddleware_MissingAuthorizationHeader(t *testing.T) {
 	mockVerifier := &mockAuthVerifier{}
 
 	// Create middleware
-	middleware := AuthMiddlewareWithVerifier(mockVerifier)
+	middleware := authMiddlewareWithVerifier(mockVerifier)
 	handler := middleware(mockHandler())
 
 	// Create a request without Authorization header
@@ -82,7 +82,7 @@ func TestAuthMiddleware_InvalidAuthorizationHeaderFormat(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockVerifier := &mockAuthVerifier{}
-			middleware := AuthMiddlewareWithVerifier(mockVerifier)
+			middleware := authMiddlewareWithVerifier(mockVerifier)
 			handler := middleware(mockHandler())
 
 			req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -111,7 +111,7 @@ func TestAuthMiddleware_EmptyTokenAfterBearer(t *testing.T) {
 		},
 	}
 
-	middleware := AuthMiddlewareWithVerifier(mockVerifier)
+	middleware := authMiddlewareWithVerifier(mockVerifier)
 	handler := middleware(mockHandler())
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -134,7 +134,7 @@ func TestAuthMiddleware_TokenVerificationFailure(t *testing.T) {
 		},
 	}
 
-	middleware := AuthMiddlewareWithVerifier(mockVerifier)
+	middleware := authMiddlewareWithVerifier(mockVerifier)
 	handler := middleware(mockHandler())
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -173,13 +173,13 @@ func TestAuthMiddleware_SuccessfulAuthentication(t *testing.T) {
 		},
 	}
 
-	middleware := AuthMiddlewareWithVerifier(mockVerifier)
+	middleware := authMiddlewareWithVerifier(mockVerifier)
 
 	// Create a handler that checks if the token was added to context
 	var contextToken *auth.Token
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Extract token from context
-		token := r.Context().Value(ctxTokenKeyType{})
+		token := r.Context().Value(CtxTokenKey{})
 		if token != nil {
 			contextToken = token.(*auth.Token)
 		}
@@ -226,7 +226,7 @@ func TestAuthMiddleware_TokenExtraction(t *testing.T) {
 		},
 	}
 
-	middleware := AuthMiddlewareWithVerifier(mockVerifier)
+	middleware := authMiddlewareWithVerifier(mockVerifier)
 	handler := middleware(mockHandler())
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
@@ -254,7 +254,7 @@ func TestAuthMiddleware_ContextPropagation(t *testing.T) {
 		},
 	}
 
-	middleware := AuthMiddlewareWithVerifier(mockVerifier)
+	middleware := authMiddlewareWithVerifier(mockVerifier)
 
 	// Create a handler that checks the context
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -264,7 +264,7 @@ func TestAuthMiddleware_ContextPropagation(t *testing.T) {
 		}
 
 		// Verify token is in context
-		token := r.Context().Value(ctxTokenKeyType{})
+		token := r.Context().Value(CtxTokenKey{})
 		if token == nil {
 			t.Error("Expected token in context, got nil")
 		}
@@ -295,7 +295,7 @@ func TestAuthMiddleware_BearerWithExtraSpaces(t *testing.T) {
 		},
 	}
 
-	middleware := AuthMiddlewareWithVerifier(mockVerifier)
+	middleware := authMiddlewareWithVerifier(mockVerifier)
 	handler := middleware(mockHandler())
 
 	// Test with token that has leading/trailing spaces after "Bearer "
@@ -322,7 +322,7 @@ func TestAuthMiddleware_MultipleRequests(t *testing.T) {
 		},
 	}
 
-	middleware := AuthMiddlewareWithVerifier(mockVerifier)
+	middleware := authMiddlewareWithVerifier(mockVerifier)
 	handler := middleware(mockHandler())
 
 	// Make multiple requests
