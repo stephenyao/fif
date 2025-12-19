@@ -1,4 +1,6 @@
-# FIF Server - Digital Ocean Deployment Guide
+# FIF - Digital Ocean Deployment Guide (Unified App)
+
+This project is now configured as a **unified application**. The Go backend serves the React frontend static files, allowing you to deploy both as a single service on Digital Ocean App Platform.
 
 ## Quick Deploy to Digital Ocean App Platform
 
@@ -7,9 +9,10 @@
 - Digital Ocean account
 
 ### 2. Push Your Code
+Ensure your changes (including the new root `Dockerfile`) are pushed to your repository.
 ```bash
 git add .
-git commit -m "Add deployment configuration"
+git commit -m "Configure unified deployment"
 git push origin main
 ```
 
@@ -21,110 +24,54 @@ git push origin main
 
 3. **Connect Your Repository:**
    - Select your GitHub/GitLab account
-   - Choose the `fif/server` repository
+   - Choose the `fif` repository
    - Select the `main` branch
+   - **Source Directory:** Leave as root `/` (it will use the root Dockerfile)
    - Click "Next"
 
 4. **Configure App:**
-   - App name: `fif-server` (or your choice)
+   - App name: `fif-app`
    - Region: Choose closest to your users
-   - Autodeploy: ✅ Enable (deploys on git push)
+   - Autodeploy: ✅ Enable
 
 5. **Set Environment Variables:**
    Click "Edit" next to environment variables and add:
    ```
    FIREBASE_KEY_B64=<your-base64-firebase-key>
-   ALLOWED_ORIGINS=https://your-frontend-domain.com
+   ALLOWED_ORIGINS=https://your-app-domain.ondigitalocean.app
    ```
+   > [!NOTE]
+   > Since the frontend is served from the same origin as the backend, you can set `ALLOWED_ORIGINS` to your app's domain.
 
 6. **Configure Resources:**
    - Instance type: Basic ($12/month recommended)
    - Instance size: 1GB RAM / 1 vCPU
 
 7. **Review & Deploy:**
-   - Review settings
    - Click "Create Resources"
-   - Wait 5-10 minutes for deployment
+   - Wait 5-10 minutes for the build to complete.
 
-### 4. After Deployment
+### 4. Local Testing with Docker
 
-Your app will be available at:
-```
-https://fif-server-xxxxx.ondigitalocean.app
-```
-
-Update your frontend's API URL to point to this domain.
-
-### 5. Custom Domain (Optional)
-
-1. Go to your app settings
-2. Click "Domains"
-3. Add your custom domain
-4. Update DNS records as instructed
-5. SSL certificate auto-provisioned
-
-## Local Testing with Docker
-
-Test your Docker build locally before deploying:
+To test the unified build locally:
 
 ```bash
-# Build the image
-docker build -t fif-server .
+# From the root directory
+docker build -t fif-app .
 
 # Run locally
 docker run -p 8080:8080 \
   -e FIREBASE_KEY_B64="your-key" \
-  -e ALLOWED_ORIGINS="http://localhost:5173" \
-  fif-server
+  -e ALLOWED_ORIGINS="http://localhost:8080" \
+  fif-app
 ```
 
-Visit: http://localhost:8080/health
+Visit: `http://localhost:8080` (Frontend) and `http://localhost:8080/api/health` (Backend).
 
 ## Environment Variables Reference
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
 | `FIREBASE_KEY_B64` | ✅ Yes | Base64-encoded Firebase credentials | `ewogICJ0eXBlIjogI...` |
-| `ALLOWED_ORIGINS` | ✅ Yes | Comma-separated CORS origins | `https://app.com,https://www.app.com` |
+| `ALLOWED_ORIGINS` | ✅ Yes | Comma-separated CORS origins | `https://your-app.com` |
 | `PORT` | No | Server port (auto-set by DO) | `8080` |
-
-## Monitoring
-
-Digital Ocean App Platform provides:
-- ✅ Build logs
-- ✅ Runtime logs
-- ✅ Metrics (CPU, memory, requests)
-- ✅ Alerts
-
-Access via: App → Logs/Insights tabs
-
-## Costs
-
-- **Basic Plan:** $12/month
-  - 1 GB RAM
-  - 1 vCPU
-  - Perfect for getting started
-
-## Troubleshooting
-
-**Build fails:**
-- Check build logs in Digital Ocean console
-- Verify `go.mod` and `go.sum` are committed
-
-**App crashes:**
-- Check runtime logs
-- Verify environment variables are set correctly
-- Test Docker build locally first
-
-**CORS errors:**
-- Ensure `ALLOWED_ORIGINS` includes your frontend domain
-- Check browser console for exact origin being sent
-
-## Next Steps
-
-1. ✅ Deploy app
-2. Test `/health` endpoint
-3. Update frontend API URL
-4. Add custom domain (optional)
-5. Set up monitoring alerts
-6. Add database when needed (Supabase recommended)
