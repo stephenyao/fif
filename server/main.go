@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fif/middleware"
 	"log"
 	"net/http"
-	"strings"
 
 	"firebase.google.com/go/v4/auth"
 	"github.com/go-chi/chi/v5"
@@ -45,22 +45,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			jwt := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-
-			token, err := authClient.VerifyIDToken(r.Context(), jwt)
-
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnauthorized)
-				return
-			}
-
-			ctx := context.WithValue(r.Context(), ctxTokenKey, token)
-
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	})
+	r.Use(middleware.AuthMiddleware(authClient))
 
 	r.Get("/account", func(w http.ResponseWriter, r *http.Request) {
 		token := r.Context().Value(ctxTokenKey).(*auth.Token)
