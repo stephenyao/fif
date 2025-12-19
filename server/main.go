@@ -59,55 +59,72 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	r.Use(middleware.AuthMiddleware(authClient))
-
-	r.Get("/account", func(w http.ResponseWriter, r *http.Request) {
-		token := r.Context().Value(middleware.CtxTokenKey{}).(*auth.Token)
-		email, _ := token.Claims["email"].(string)
-		name, _ := token.Claims["name"].(string)
-
-		resp := map[string]string{
-			"email": email,
-			"name":  name,
-		}
-
+	// Public routes (no authentication required)
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "healthy",
+		})
 	})
 
-	r.Get("/holdings", func(w http.ResponseWriter, r *http.Request) {
-		resp := []HoldingDTO{
-			{
-				Name:     "Block",
-				Symbol:   "XYZ",
-				Quantity: 10,
-				Currency: "USD",
-				Cost:     123.45,
-			},
-			{
-				Name:     "Google",
-				Symbol:   "GOOG",
-				Quantity: 30,
-				Currency: "USD",
-				Cost:     223.45,
-			},
-			{
-				Name:     "Apple",
-				Symbol:   "APPL",
-				Quantity: 40,
-				Currency: "USD",
-				Cost:     139.45,
-			},
-		}
+	// Protected routes (authentication required)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware(authClient))
 
-		w.Header().Set("Content-Type", "application/json")
+		r.Get("/account", func(w http.ResponseWriter, r *http.Request) {
+			token, ok := r.Context().Value(middleware.CtxTokenKey{}).(*auth.Token)
+			if !ok || token == nil {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
 
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
+			email, _ := token.Claims["email"].(string)
+			name, _ := token.Claims["name"].(string)
+
+			resp := map[string]string{
+				"email": email,
+				"name":  name,
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		})
+
+		r.Get("/holdings", func(w http.ResponseWriter, r *http.Request) {
+			resp := []HoldingDTO{
+				{
+					Name:     "Block",
+					Symbol:   "XYZ",
+					Quantity: 10,
+					Currency: "USD",
+					Cost:     123.45,
+				},
+				{
+					Name:     "Google",
+					Symbol:   "GOOG",
+					Quantity: 30,
+					Currency: "USD",
+					Cost:     223.45,
+				},
+				{
+					Name:     "Apple",
+					Symbol:   "APPL",
+					Quantity: 40,
+					Currency: "USD",
+					Cost:     139.45,
+				},
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+
+			if err := json.NewEncoder(w).Encode(resp); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		})
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", r))
