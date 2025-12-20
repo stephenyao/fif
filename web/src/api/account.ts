@@ -4,7 +4,7 @@ import { type AccountProfile } from "../models/Account";
 export async function getAccountProfile(
     signal?: AbortSignal
 ): Promise<AccountProfile> {
-    const res = await authFetch(`${import.meta.env.VITE_API_URL}/account`, {
+    const res = await authFetch("http://localhost:8080/account", {
         method: "GET",
         signal,
     });

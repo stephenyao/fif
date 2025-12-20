@@ -2,7 +2,7 @@ import { authFetch } from "../lib/authFetch";
 import type { Holding } from "../models/Holding";
 
 export async function getHoldings(signal?: AbortSignal): Promise<Holding[]> {
-    const res = await authFetch(`${import.meta.env.VITE_API_URL}/holdings`, {
+    const res = await authFetch("http://localhost:8080/holdings", {
         method: "GET",
         signal,
     });
