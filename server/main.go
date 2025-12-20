@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"embed"
 	"fif/handlers"
 	"fif/middleware"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -15,15 +13,10 @@ import (
 	"github.com/go-chi/cors"
 )
 
-//go:embed dist/*
-var staticFiles embed.FS
-
 func getCORSOrigins() []string {
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
 	if allowedOrigins == "" {
-		// In production, when serving from same origin, we might not need this,
-		// but keeping it for flexibility.
-		return []string{"http://localhost:5173"}
+		log.Fatal("ALLOWED_ORIGINS environment variable is required")
 	}
 
 	origins := strings.Split(allowedOrigins, ",")
@@ -57,47 +50,19 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// API Routes
-	r.Route("/api", func(r chi.Router) {
-		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status":"ok"}`))
-		})
-
-		// Protected routes (authentication required)
-		r.Group(func(r chi.Router) {
-			r.Use(middleware.AuthMiddleware(authClient))
-			r.Get("/account", handlers.AccountHandler)
-			r.Get("/holdings", handlers.HoldingsHandler)
-		})
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
 	})
 
-	// Static Files Serving
-	publicFS, err := fs.Sub(staticFiles, "dist")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fileServer := http.FileServer(http.FS(publicFS))
+	// Protected routes (authentication required)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.AuthMiddleware(authClient))
 
-	r.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-		// If the file exists in the static files, serve it
-		f, err := publicFS.Open(strings.TrimPrefix(path, "/"))
-		if err == nil {
-			f.Close()
-			fileServer.ServeHTTP(w, r)
-			return
-		}
+		r.Get("/account", handlers.AccountHandler)
 
-		// Otherwise serve index.html (for React Router)
-		index, err := publicFS.Open("index.html")
-		if err != nil {
-			http.Error(w, "index.html not found", http.StatusNotFound)
-			return
-		}
-		index.Close()
-		http.ServeFileFS(w, r, publicFS, "index.html")
+		r.Get("/holdings", handlers.HoldingsHandler)
 	})
 
 	port := os.Getenv("PORT")
