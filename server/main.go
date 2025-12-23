@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fif/handlers"
 	"fif/middleware"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +14,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 )
+
+//go:embed webdist/*
+var webdist embed.FS
 
 func getCORSOrigins() []string {
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
@@ -64,6 +69,14 @@ func main() {
 
 		r.Get("/holdings", handlers.HoldingsHandler)
 	})
+
+	// Static files and SPA fallback
+	distFS, err := fs.Sub(webdist, "webdist")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r.Get("/*", handlers.SPAHandler(distFS))
 
 	port := os.Getenv("PORT")
 	if port == "" {
