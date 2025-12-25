@@ -15,7 +15,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-//go:embed webdist/*
+//go:embed all:webdist/*
 var webdist embed.FS
 
 func getCORSOrigins() []string {
@@ -55,19 +55,21 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	r.Route("/api", func(r chi.Router) {
+		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"status":"ok"}`))
+		})
 
-	// Protected routes (authentication required)
-	r.Group(func(r chi.Router) {
-		r.Use(middleware.AuthMiddleware(authClient))
+		// Protected routes (authentication required)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware.AuthMiddleware(authClient))
 
-		r.Get("/account", handlers.AccountHandler)
+			r.Get("/account", handlers.AccountHandler)
 
-		r.Get("/holdings", handlers.HoldingsHandler)
+			r.Get("/holdings", handlers.HoldingsHandler)
+		})
 	})
 
 	// Static files and SPA fallback
