@@ -45,6 +45,12 @@ func main() {
 		log.Fatalf("error getting auth client: %v\n", err)
 	}
 
+	db, err := InitDB()
+	if err != nil {
+		log.Fatalf("error initializing database: %v\n", err)
+	}
+	defer db.Close()
+
 	origins := getCORSOrigins()
 
 	r := chi.NewRouter()
@@ -68,7 +74,7 @@ func main() {
 
 			r.Get("/account", handlers.AccountHandler)
 
-			r.Get("/holdings", handlers.HoldingsHandler)
+			r.Get("/holdings", handlers.MakeHoldingsHandler(db))
 		})
 	})
 
