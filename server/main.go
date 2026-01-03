@@ -62,6 +62,7 @@ func main() {
 	}))
 
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/holdings", handlers.MakeHoldingsHandler(db))
 		r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)

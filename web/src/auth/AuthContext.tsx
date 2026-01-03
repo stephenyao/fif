@@ -6,13 +6,8 @@ import {
     useState,
     type ReactNode,
 } from "react";
-import { auth, googleProvider } from "../lib/firebase";
-import {
-    onAuthStateChanged,
-    signInWithPopup,
-    signOut as fbSignOut,
-    type User,
-} from "firebase/auth";
+import { supabase } from "../lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 interface AuthContextValue {
     loggedIn: boolean;
@@ -29,12 +24,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [initializing, setInitializing] = useState(true);
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, (u) => {
-            setUser(u);
-            if (initializing) setInitializing(false);
+        let mounted = true;
+
+        supabase.auth
+            .getSession()
+            .then(({ data, error }) => {
+                if (!mounted) return;
+                if (error) {
+                    console.error("Failed to get Supabase session:", error);
+                }
+                setUser(data.session?.user ?? null);
+                setInitializing(false);
+            })
+            .catch((err) => {
+                if (!mounted) return;
+                console.error("Failed to initialize Supabase auth:", err);
+                setInitializing(false);
+            });
+
+        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            setInitializing(false);
         });
-        return () => unsub();
-    }, [initializing]);
+
+        return () => {
+            mounted = false;
+            data.subscription.unsubscribe();
+        };
+    }, []);
 
     const value = useMemo<AuthContextValue>(
         () => ({
@@ -42,11 +59,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             user,
             initializing,
             signIn: async () => {
-                const user = await signInWithPopup(auth, googleProvider);
-                console.log(user);
+                const redirectTo =
+                    import.meta.env.VITE_SUPABASE_REDIRECT_URL;
+                if (!redirectTo) {
+                    console.error(
+                        "VITE_SUPABASE_REDIRECT_URL is required for sign-in."
+                    );
+                    return;
+                }
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: "google",
+                    options: { redirectTo },
+                });
+                if (error) {
+                    console.error("Supabase sign-in failed:", error);
+                }
             },
             signOut: async () => {
-                await fbSignOut(auth);
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    console.error("Supabase sign-out failed:", error);
+                }
             },
         }),
         [user, initializing]
